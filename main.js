@@ -2,6 +2,10 @@ import {log as print} from 'node:console';
 import {readFile as read} from 'node:fs/promises';
 
 const ENCODING = 'utf8';
+const NEWLINE = '\n';
+const PIPE = '|';
+const LINE = '-';
+const SUDOKU_LIMIT = 9;
 
 //helper functions
 async function read_data(path_to_json) {
@@ -54,8 +58,8 @@ class Sudoku extends Grid {
 		return [...this].map(
 			row => row.map(
 				num => ` ${num} `
-			).join('')
-		).join('\n');
+			).join(PIPE)
+		).join(NEWLINE + LINE.repeat(4 * SUDOKU_LIMIT) + NEWLINE);
 	}
 }
 
