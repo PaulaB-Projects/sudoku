@@ -55,11 +55,16 @@ class Sudoku extends Grid {
 		if (!this.can_guess(row, col))
 			return false;
 
+		const old_num = this.get(row, col);
 		this.set(row, col, num);
 
-		if(!this.valid(row, col))
+		if(!this.valid(row, col)) {
+			this.set(row, col, old_num);
 			return false;
-		
+		}
+
+		this.show();
+		return true;
 	}
 
 	can_guess(row = 0, col = 0, num = 1) {
@@ -104,7 +109,7 @@ class Sudoku extends Grid {
 	toString() {
 		return [...this].map(
 			row => row.map(
-				num => ` ${num} `
+				num => ` ${num ? num : ' '} `
 			).join(PIPE)
 		).join(NEWLINE + LINE.repeat(4 * SUDOKU_LIMIT - 1) + NEWLINE);
 	}
@@ -127,3 +132,5 @@ class Sudoku extends Grid {
 }
 
 const sudoku = new Sudoku(puzzle_to_solve);
+
+print(sudoku.guess(0, 0, 1));
