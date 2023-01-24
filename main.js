@@ -58,7 +58,7 @@ class Sudoku extends Grid {
 		const old_num = this.get(row, col);
 		this.set(row, col, num);
 
-		if(!this.valid(row, col)) {
+		if(!this.is_valid(row, col)) {
 			this.set(row, col, old_num);
 			return false;
 		}
@@ -72,33 +72,33 @@ class Sudoku extends Grid {
 	}
 
 	is_valid(row = 0, col = 0) {
-		return check_row(row) &&
-					check_col(col) &&
-					check_box(row, col);
+		return this.check_row(row) &&
+					this.check_col(col) &&
+					this.check_box(row, col);
 	}
 
 	check_row(row = 0) {
 		return Sudoku.check_num_count(
-			this.row(row)
+			this.get_row(row)
 		);
 	}
 
 	check_col(col = 0) {
 		return Sudoku.check_num_count(
-			this.col(col)
+			this.get_col(col)
 		);
 	}
 
 	check_box(row = 0, col= 0) {
 		const [start_row, start_col] = [row, col].map(Sudoku.get_box_index);
-		const [end_row, end_col] = [start_row, start_row].map(coord =>
+		const [end_row, end_col] = [start_row, start_col].map(coord =>
 			coord + Sudoku.BOX_SIZE);
 		
 		const box_as_array = [];
 
 		for (let row = start_row; row < end_row; row++)
 			for(let col = start_col; col < end_col; col++)
-			box_as_array.push(this.get(box_as_array));
+				box_as_array.push(this.get(row, col));
 		
 		return Sudoku.check_num_count(box_as_array);
 	}
@@ -111,10 +111,15 @@ class Sudoku extends Grid {
 			row => row.map(
 				num => ` ${num ? num : ' '} `
 			).join(PIPE)
-		).join(NEWLINE + LINE.repeat(4 * SUDOKU_LIMIT - 1) + NEWLINE);
+		).join(NEWLINE + LINE.repeat(4 * SUDOKU_LIMIT - 1) + NEWLINE) + NEWLINE;
 	}
 
 	static BOX_SIZE = 3;
+
+	static in_range(coord) {
+		return coord >= 0 && coord < 9;
+	}
+
 	static get_box_index(coord) {
 		return coord - (coord % Sudoku.BOX_SIZE);
 	}
@@ -124,13 +129,59 @@ class Sudoku extends Grid {
 
 		array
 			.filter(num => num > 0)
-			.forEach(num => counts[num - 1] += 1
-);
+			.forEach(num => counts[num - 1] += 1);
 
 		return counts.every(count => count <= 1);
 	}
 }
 
-const sudoku = new Sudoku(puzzle_to_solve);
+function sudoku(puzzle = [[]]) {
+	const game = new Sudoku(puzzle_to_solve);
 
-print(sudoku.guess(0, 0, 1));
+	let row = 0;
+	let col = 0;
+	let direction = 1; // -1 backwords
+
+	while (Sudoku.in_range(row)) {
+		while (Sudoku.in_range(col)) {
+
+			print(`(${ row }, ${ col } ) ${direction > 0 ? '=>' : '<='}`);
+			 if (game.can_guess(row, col)) {
+				let guess = game.get(row, col) + 1 || 1;
+				
+				while (guess <= 9) {
+					if (game.guess(row, col, guess)) {
+						direction = 1;
+						break;
+					} else if (guess === 9) {
+						direction = -1;
+					}
+					guess++;
+				}
+				if (direction < 0) 
+					game.set(row, col, 0);
+			 } 
+
+			col += direction;
+		}
+		col = direction > 0 ? 0 : 8;
+		row += direction;
+	}
+	
+
+	return [[...game]];
+}
+
+const solved_puzzle = new Grid(sudoku(puzzle_to_solve));
+const solution = new Grid(puzzle_solution);
+
+print(
+	solved_puzzle
+	.every((row_array, row_num)=>
+		row_array
+			.every((num, col_num) =>
+				num === solution.get(row_num, col_num)
+			)
+	)
+);
+
